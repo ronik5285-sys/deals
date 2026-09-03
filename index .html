@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meesho Style Affiliate App</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f4f5f7; color: #333; padding-bottom: 20px; }
+        
+        header { background-color: #ffffff; padding: 12px 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 20px; font-weight: 800; color: #f43397; }
+        .user-auth-btn { background: #f43397; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .user-profile { font-size: 12px; font-weight: 600; color: #0f172a; display: none; align-items: center; gap: 6px; }
+        .search-box { display: flex; align-items: center; background: #f0f2f5; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 8px; }
+        .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 14px; }
+        
+        .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px; background: #ffffff; border-bottom: 1px solid #e2e8f0; scrollbar-width: none; }
+        .category-scroll::-webkit-scrollbar { display: none; }
+        .cat-chip { padding: 6px 14px; background: #f1f5f9; color: #475569; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; border: 1px solid #cbd5e1; }
+        .cat-chip.active { background: #f43397; color: white; border-color: #f43397; }
+
+        .container { padding: 10px; max-width: 800px; margin: 0 auto; }
+        .trending-banner { background: linear-gradient(135deg, #f43397, #9b27b0); color: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(244, 51, 151, 0.2); }
+        .banner-btn { background-color: #ffffff; color: #f43397; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; text-decoration: none; }
+        .countdown-strip { background: #ffffff; padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border: 1px solid #ffe4f2; }
+        .timer-box { font-size: 13px; font-weight: bold; color: #f43397; background: #fdf2f8; padding: 4px 10px; border-radius: 6px; }
+        
+        .meesho-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .meesho-card { background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; flex-direction: column; cursor: pointer; }
+        .image-container { position: relative; width: 100%; padding-top: 100%; background-color: #f9fafb; }
+        .image-container img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .platform-badge { position: absolute; top: 6px; left: 6px; background: rgba(255, 255, 255, 0.95); color: #333; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; z-index: 1; }
+        .card-body { padding: 8px; display: flex; flex-direction: column; flex-grow: 1; }
+        .p-title { font-size: 13px; color: #4a4a4a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+        .main-price { font-size: 15px; font-weight: bold; color: #212121; }
+        .mrp-price { font-size: 11px; color: #878787; text-decoration: line-through; }
+        .discount-off { font-size: 11px; color: #038d63; font-weight: bold; }
+        .coupon-strip { background: #e8f5e9; color: #2e7d32; font-size: 10px; font-weight: 600; padding: 5px 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .copy-btn { background: none; border: none; color: #1b5e20; font-weight: bold; cursor: pointer; text-decoration: underline; font-size: 10px; }
+        .btn-buy { background-color: #f43397; color: white; text-align: center; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: bold; border: none; width: 100%; cursor: pointer; margin-top: auto; }
+
+        /* Detail Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: flex-end; }
+        .modal-content { background: #ffffff; width: 100%; max-width: 500px; max-height: 90vh; border-radius: 16px 16px 0 0; overflow-y: auto; padding: 15px; position: relative; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .close-btn { position: absolute; top: 12px; right: 15px; background: #e2e8f0; border: none; font-size: 18px; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; z-index: 10; }
+        .detail-img-box { width: 100%; height: 300px; border-radius: 12px; overflow: hidden; position: relative; background: #f8fafc; margin-bottom: 15px; }
+        .detail-img-box img { width: 100%; height: 100%; object-fit: contain; }
+        .detail-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+        .feature-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-top: 12px; }
+        .feature-item { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed #cbd5e1; }
+        .feature-item:last-child { border-bottom: none; }
+        
+        /* PIN Auth Modal */
+        .auth-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
+        .auth-card { background: #fff; width: 90%; max-width: 360px; border-radius: 12px; padding: 20px; text-align: center; }
+        .auth-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; margin: 6px 0; outline: none; font-size: 13px; text-align: center; }
+        .forgot-link { font-size: 12px; color: #f43397; text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 8px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-top">
+            <div class="logo">DealsHub</div>
+            <button id="loginBtn" class="user-auth-btn" onclick="openAuthModal()">Login / Register</button>
+            <div id="userProfile" class="user-profile">
+                <span id="userName">User</span>
+                <button class="user-auth-btn" style="background:#ef4444;" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        <div class="search-box">
+            <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Products khojein...">
+        </div>
+    </header>
+
+    <div class="category-scroll">
+        <button class="cat-chip active" onclick="selectCategory('All', this)">All</button>
+        <button class="cat-chip" onclick="selectCategory('Men', this)">👨 Men</button>
+        <button class="cat-chip" onclick="selectCategory('Women', this)">👩 Women</button>
+        <button class="cat-chip" onclick="selectCategory('Kids', this)">🧒 Kids</button>
+        <button class="cat-chip" onclick="selectCategory('Electronics', this)">🎧 Electronics</button>
+        <button class="cat-chip" onclick="selectCategory('Beauty', this)">💄 Beauty</button>
+        <button class="cat-chip" onclick="selectCategory('Home', this)">🏠 Home</button>
+    </div>
+
+    <div class="container">
+        <div class="trending-banner">
+            <div class="trending-text">
+                <h3 id="bTitle">🔥 Mega Sale Offer</h3>
+                <p id="bSub">Flat 60% OFF on Top Picks</p>
+            </div>
+            <a href="#" id="bLink" target="_blank" class="banner-btn">Shop Now</a>
+        </div>
+
+        <div class="countdown-strip">
+            <span style="font-size: 13px; font-weight: bold;">⚡ Flash Sale Ends In:</span>
+            <span class="timer-box" id="timer">00h : 00m : 00s</span>
+        </div>
+
+        <div class="meesho-grid" id="productContainer">
+            <p style="grid-column: span 2; text-align: center; padding: 20px;">Products load ho rahe hain...</p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div class="detail-img-box">
+                <span class="platform-badge" id="mPlatform" style="top: 10px; left: 10px;"></span>
+                <img id="mImg" src="" alt="Product Big Image">
+            </div>
+            <div class="detail-title" id="mTitle"></div>
+            
+            <div class="price-row" style="margin-bottom: 10px;">
+                <span class="main-price" id="mPrice" style="font-size: 22px; color: #f43397;"></span>
+                <span class="mrp-price" id="mMRP" style="font-size: 14px;"></span>
+                <span class="discount-off" id="mDiscount" style="font-size: 14px;"></span>
+            </div>
+
+            <div id="mCouponStrip" class="coupon-strip" style="display:none; padding: 8px 12px; font-size: 12px; margin-bottom: 12px;">
+                <span>Coupon Code: <b id="mCoupon"></b></span>
+                <button class="copy-btn" id="mCopyBtn" style="font-size: 12px;">Copy Code</button>
+            </div>
+
+            <div class="feature-box">
+                <div style="font-weight: 700; font-size: 14px; margin-bottom: 8px; color:#f43397;">📌 Product Details & Features:</div>
+                <div class="feature-item"><span class="feature-label">Category</span><span class="feature-val" id="mCat"></span></div>
+                <div class="feature-item"><span class="feature-label">Platform Partner</span><span class="feature-val" id="mPlatformVal"></span></div>
+                <div class="feature-item"><span class="feature-label">Offer Status</span><span class="feature-val" style="color: #038d63;">In Stock / Verified Offer</span></div>
+            </div>
+
+            <a id="mBuyBtn" href="#" onclick="checkAuthAndBuy(event)" style="text-decoration:none; display: block; margin-top: 15px;">
+                <button class="btn-buy" style="padding: 12px; font-size: 15px; border-radius: 8px;">Buy Now Directly</button>
+            </a>
+        </div>
+    </div>
+
+    <div class="auth-modal" id="authModal">
+        <div class="auth-card">
+            
+            <div id="mainAuthView">
+                <h3 style="color:#f43397; margin-bottom:4px;">User Login / Register</h3>
+                <p style="font-size:11px; color:#64748b; margin-bottom:10px;">10-digit Number aur Secret PIN enter karein</p>
+
+                <input type="text" id="authName" class="auth-input" placeholder="Full Name (Naye Account Ke Liye)">
+                <input type="tel" id="authPhone" class="auth-input" maxlength="10" placeholder="10-digit Mobile Number">
+                <input type="password" id="authPin" class="auth-input" maxlength="4" placeholder="🔒 4-Digit Security PIN">
+                <input type="text" id="authSecAnswer" class="auth-input" placeholder="Fav Color (Security Question)">
+
+                <button class="btn-buy" style="padding:10px; margin-top:6px;" onclick="handlePinLogin()">Login / Create Account</button>
+                
+                <div>
+                    <span class="forgot-link" onclick="showResetView()">Forgot PIN?</span>
+                </div>
+            </div>
+
+            <div id="resetAuthView" style="display:none;">
+                <h3 style="color:#f43397; margin-bottom:4px;">Reset Your PIN</h3>
+                <p style="font-size:11px; color:#64748b; margin-bottom:10px;">Details verify karke Naya PIN set karein</p>
+
+                <input type="tel" id="resetPhone" class="auth-input" maxlength="10" placeholder="Registered Mobile Number">
+                <input type="text" id="resetSecAnswer" class="auth-input" placeholder="Security Answer (Fav Color)">
+                <input type="password" id="resetNewPin" class="auth-input" maxlength="4" placeholder="🔒 Enter New 4-Digit PIN">
+
+                <button class="btn-buy" style="padding:10px; margin-top:6px; background:#038d63;" onclick="handlePinReset()">Update & Save PIN</button>
+                
+                <div>
+                    <span class="forgot-link" style="color:#64748b;" onclick="showLoginView()">Back to Login</span>
+                </div>
+            </div>
+
+            <button class="user-auth-btn" style="background:#cbd5e1; color:#333; width:100%; margin-top:10px;" onclick="closeAuthModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAo0I9-HbSqnUtMaLf4MIRUDOKfDQucgcE",
+            authDomain: "kr-khan-85de9.firebaseapp.com",
+            projectId: "kr-khan-85de9",
+            storageBucket: "kr-khan-85de9.firebasestorage.app",
+            messagingSenderId: "212834325755",
+            appId: "1:212834325755:web:54a51ef2b0474434b74c5e",
+            measurementId: "G-FBD17GKQLN"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let allProducts = [];
+        let selectedCat = 'All';
+        let currentUser = JSON.parse(localStorage.getItem('appUser')) || null;
+        let currentRedirectUrl = "#";
+
+        updateUserUI();
+
+        db.collection("products").onSnapshot((snapshot) => {
+            allProducts = [];
+            snapshot.forEach((doc) => {
+                allProducts.push({ id: doc.id, ...doc.data() });
+            });
+            filterProducts();
+        });
+
+        db.collection("settings").doc("banner").onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                document.getElementById("bTitle").innerText = data.title || "🔥 Mega Sale Offer";
+                document.getElementById("bSub").innerText = data.sub || "Flat 60% OFF";
+                document.getElementById("bLink").href = data.link || "#";
+                if(data.hours) startCountdown(data.hours);
+            }
+        });
+
+        function updateUserUI() {
+            if(currentUser) {
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('userProfile').style.display = 'flex';
+                document.getElementById('userName').innerText = "👤 " + currentUser.name;
+            } else {
+                document.getElementById('loginBtn').style.display = 'block';
+                document.getElementById('userProfile').style.display = 'none';
+            }
+        }
+
+        // LOGIN / REGISTER WITH PIN AND SECURITY ANSWER
+        function handlePinLogin() {
+            const name = document.getElementById('authName').value.trim();
+            const phone = document.getElementById('authPhone').value.trim();
+            const pin = document.getElementById('authPin').value.trim();
+            const secAns = document.getElementById('authSecAnswer').value.trim().toLowerCase();
+
+            if (phone.length !== 10) { alert("Sahi 10-digit Mobile Number enter karein!"); return; }
+            if (pin.length !== 4 || isNaN(pin)) { alert("4-Digit ka Numeric PIN enter karein!"); return; }
+
+            const userRef = db.collection("users").doc(phone);
+
+            userRef.get().then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    if (userData.pin === pin) {
+                        const loginUser = { name: userData.name, phone: phone, lastLogin: new Date().toLocaleString() };
+                        userRef.update({ lastLogin: new Date().toLocaleString() });
+                        localStorage.setItem('appUser', JSON.stringify(loginUser));
+                        currentUser = loginUser;
+                        updateUserUI();
+                        closeAuthModal();
+                        alert("Login Successful!");
+                        if(currentRedirectUrl !== "#") window.open(currentRedirectUrl, '_blank');
+                    } else {
+                        alert("❌ Galat Security PIN! Kripya 'Forgot PIN' click karke reset karein.");
+                    }
+                } else {
+                    if (!name || !secAns) { alert("Naye User ke liye Name aur Security Answer (Fav Color) dono zaroori hain!"); return; }
+                    const newUser = {
+                        name: name,
+                        phone: phone,
+                        pin: pin,
+                        secAnswer: secAns,
+                        createdAt: new Date().toLocaleString(),
+                        lastLogin: new Date().toLocaleString()
+                    };
+
+                    userRef.set(newUser).then(() => {
+                        localStorage.setItem('appUser', JSON.stringify({ name: name, phone: phone }));
+                        currentUser = newUser;
+                        updateUserUI();
+                        closeAuthModal();
+                        alert("Account Ban Gaya! PIN aur Security Answer yaad rakhein.");
+                        if(currentRedirectUrl !== "#") window.open(currentRedirectUrl, '_blank');
+                    });
+                }
+            });
+        }
+
+        // SELF-SERVICE PIN RESET SYSTEM
+        function handlePinReset() {
+            const phone = document.getElementById('resetPhone').value.trim();
+            const secAns = document.getElementById('resetSecAnswer').value.trim().toLowerCase();
+            const newPin = document.getElementById('resetNewPin').value.trim();
+
+            if (phone.length !== 10) { alert("Sahi Mobile Number enter karein!"); return; }
+            if (!secAns) { alert("Security Answer enter karein!"); return; }
+            if (newPin.length !== 4 || isNaN(newPin)) { alert("Naya 4-Digit PIN enter karein!"); return; }
+
+            const userRef = db.collection("users").doc(phone);
+
+            userRef.get().then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    if (userData.secAnswer && userData.secAnswer === secAns) {
+                        userRef.update({ pin: newPin }).then(() => {
+                            alert("✅ PIN Reset Successful! Naye PIN se login karein.");
+                            showLoginView();
+                        });
+                    } else {
+                        alert("❌ Galat Security Answer! Details match nahi hui.");
+                    }
+                } else {
+                    alert("Yeh Mobile Number registered nahi hai!");
+                }
+            });
+        }
+
+        function showResetView() {
+            document.getElementById('mainAuthView').style.display = 'none';
+            document.getElementById('resetAuthView').style.display = 'block';
+        }
+
+        function showLoginView() {
+            document.getElementById('mainAuthView').style.display = 'block';
+            document.getElementById('resetAuthView').style.display = 'none';
+        }
+
+        function logout() {
+            localStorage.removeItem('appUser');
+            currentUser = null;
+            updateUserUI();
+            alert("Logged Out Successfully!");
+        }
+
+        function checkAuthAndBuy(e) {
+            if(!currentUser) {
+                e.preventDefault();
+                alert("Product khareedne ke liye Login zaroori hai!");
+                openAuthModal();
+            }
+        }
+
+        function openAuthModal() { 
+            showLoginView();
+            document.getElementById('authModal').style.display = 'flex'; 
+        }
+        function closeModal() { document.getElementById("productModal").style.display = "none"; }
+        function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+
+        function selectCategory(cat, btn) {
+            selectedCat = cat;
+            document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const searchVal = document.getElementById("searchInput").value.toLowerCase();
+            const filtered = allProducts.filter(p => {
+                const matchesSearch = p.title.toLowerCase().includes(searchVal);
+                const matchesCat = (selectedCat === 'All') || (p.category === selectedCat);
+                return matchesSearch && matchesCat;
+            });
+            renderProducts(filtered);
+        }
+
+        function renderProducts(products) {
+            const container = document.getElementById("productContainer");
+            container.innerHTML = "";
+
+            if (products.length === 0) {
+                container.innerHTML = "<p style='grid-column: span 2; text-align: center; padding:20px; color:#64748b;'>Is category me koi product nahi hai.</p>";
+                return;
+            }
+
+            products.forEach(p => {
+                container.innerHTML += `
+                    <div class="meesho-card" onclick="openProductModal('${p.id}')">
+                        <div class="image-container">
+                            <span class="platform-badge">${p.platform}</span>
+                            <img src="${p.image}" alt="Product">
+                        </div>
+                        <div class="card-body">
+                            <div class="p-title">${p.title}</div>
+                            <div class="price-row">
+                                <span class="main-price">₹${p.price}</span>
+                                <span class="mrp-price">₹${p.mrp}</span>
+                                <span class="discount-off">${p.discount}</span>
+                            </div>
+                            <button class="btn-buy" style="margin-top:auto;">View Details</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openProductModal(id) {
+            const p = allProducts.find(item => item.id === id);
+            if(!p) return;
+
+            document.getElementById("mImg").src = p.image;
+            document.getElementById("mPlatform").innerText = p.platform;
+            document.getElementById("mTitle").innerText = p.title;
+            document.getElementById("mPrice").innerText = "₹" + p.price;
+            document.getElementById("mMRP").innerText = "₹" + p.mrp;
+            document.getElementById("mDiscount").innerText = p.discount;
+            document.getElementById("mCat").innerText = p.category || 'General';
+            document.getElementById("mPlatformVal").innerText = p.platform;
+            
+            currentRedirectUrl = p.link;
+            document.getElementById("mBuyBtn").href = p.link;
+
+            const couponStrip = document.getElementById("mCouponStrip");
+            if(p.coupon) {
+                couponStrip.style.display = "flex";
+                document.getElementById("mCoupon").innerText = p.coupon;
+                document.getElementById("mCopyBtn").onclick = function(e) {
+                    e.stopPropagation();
+                    copyCode(p.coupon, this);
+                };
+            } else {
+                couponStrip.style.display = "none";
+            }
+
+            document.getElementById("productModal").style.display = "flex";
+        }
+
+        function copyCode(code, btn) {
+            navigator.clipboard.writeText(code);
+            btn.innerText = "Copied!";
+            setTimeout(() => { btn.innerText = "Copy Code"; }, 2000);
+        }
+
+        function startCountdown(hours) {
+            let targetTime = new Date().getTime() + (hours * 60 * 60 * 1000);
+            setInterval(() => {
+                let now = new Date().getTime();
+                let dist = targetTime - now;
+                if (dist > 0) {
+                    let h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    let m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                    let s = Math.floor((dist % (1000 * 60)) / 1000);
+                    document.getElementById("timer").innerText = `${h < 10 ? '0'+h : h}h : ${m < 10 ? '0'+m : m}m : ${s < 10 ? '0'+s : s}s`;
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
